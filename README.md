@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## qball-frontend-2
 
-## Getting Started
+QWERTYBall is a little browser game built with a Javascript frontend and a Ruby on Rails backend.
 
-First, run the development server:
+### How to Use
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+QWERTYBall was built on Ruby 2.6.1 and uses npm to install node modules. You'll probably need a similar set-up to get it to run correctly.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+#### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. First, clone or download the [frontend_breakout repo](https://github.com/mathlete01/frontend_breakout) and [backend_breakout_api repo](https://github.com/mathlete01/backend_breakout_api)
+2. Put both files into a directory called `keyboard_breakout`
+3. `cd` into the `frontend_breakout` directory and run `npm install` to install all the required module.
+4. `cd ..` once they're installed to get back into the `keyboard_breakout` directory.
+5. `cd` into the `backend_breakout_api` directory and run `npm install` to install all the required module.
+6. Enter `rails db:migrate` to run the database migrations.
+7. Start the application by entering `rails s`.
+8. `cd ..` to get back into the `keyboard_breakout` directory.
+9. Finally, `cd` into the `frontend_breakout_api` directory and enter `open app/index.html` to see it running.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### Using the app
 
-## Learn More
+1. On the homepage, choose 'Start Game'.
+2. The goal is to keep the ball from escaping the bounds of the keyboard. Type the keys so that the ball ricochets in the other direction to keep the ball in play.
+3. The ball starts out slowly, but gets faster with each collision.
+4. At the end of the game, if you are pleased with your score go ahead and enter your name. They database will keep track of your top 3 scores and the top 10 scores overall. Good luck!
 
-To learn more about Next.js, take a look at the following resources:
+#### Game Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+![QWERTYBall Architecture](https://github.com/mathlete01/frontend_breakout/raw/main/assets/images/QWERTYBall_Architecture.png)
