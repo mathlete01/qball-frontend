@@ -1,5 +1,18 @@
 {
-    "editor.fontSize": 15,
+  // Workbench settings
+  "workbench.colorTheme": "Monokai Pro",
+  "workbench.iconTheme": "Monokai Pro Icons",
+  "workbench.startupEditor": "none",
+
+  // Integrated terminal (ARM64)
+  "terminal.integrated.profiles.osx": {
+    "zsh": {
+      "path": "/usr/bin/arch",
+      "args": ["-arm64", "/bin/zsh", "-l"]
+    }
+  },
+  "editor.fontSize": 15,
+  "terminal.integrated.defaultProfile.osx": "zsh",
     "editor.minimap.sectionHeaderFontSize": 15,
     "debug.console.fontSize": 15,
     "scm.inputFontSize": 15,
