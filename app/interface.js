@@ -52,33 +52,20 @@ if (isMobile) {
 let PLAYERS_URL, GAMES_URL;
 
 function resetGlobalVars() {
-  // var host = window.location.hostname;
   const host = window.location.hostname;
 
   // ----------------------FOR TESTING-------------------------------------
-  // testing = host.indexOf("localhost") > -1 ? true : false;
   // robust localhost detection
   testing = isLocalHost(host);
   // ----------------------------------------------------------------------
 
-  //Force Redirect to use SSL, need to comment while doing local development
-  // if (!testing && window.location.protocol == "http:") {
-  //   window.location.href = "https://" + host;
-  // }
+
   // Only force HTTPS outside local dev
   if (!testing && window.location.protocol === "http:") {
     window.location.href = "https://" + host;
   }
 
-  // if (testing === true) {
-  //   console.log(`* * * TESTING = TRUE 1144* * * `);
-  //   speed = 1; // speed up gameplay
-  //   lives = 1; // test gameplay then immediately test saving
-  //   BASE_URL = "http://localhost:3000";
-  // } else {
-  //   speed = 0.3; //normal
-  //   lives = 3; //normal
-  // }
+
   if (testing) {
     console.log(`* * * TESTING = TRUE * * *`);
     speed = 1;
@@ -112,8 +99,6 @@ function resetGlobalVars() {
 //------------------------------------------
 resetGlobalVars();
 
-// const PLAYERS_URL = `${BASE_URL}/players`;
-// const GAMES_URL = `${BASE_URL}/games`;
 const leaderboard = document.getElementById("leaderboard");
 const colorKeyDownStroke = colorBlack;
 const colorKeyDownFill = colorBlack;
@@ -820,20 +805,6 @@ document.addEventListener("DOMContentLoaded", (event) => {
   // ----------------------Start Game--------------------------
 
   function createPlayer() {
-    // if (testing) {
-    //   console.log(`createPlayer()`);
-    // }
-    // let configObjCreate = {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Accept: "application/json",
-    //   },
-    // };
-    // fetch(PLAYERS_URL, configObjCreate)
-    //   .then((res) => res.json())
-    //   .then((data) => setCurrentPlayer(data))
-    //   .catch((errors) => console.log(`createPlayer: ${errors}`));
     const playerData = { name: "Anonymous" };
 
     fetch(PLAYERS_URL, {
@@ -868,23 +839,8 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const payload = { game: { player_id: playerId } };
     if (testing) console.log("createGame payload", payload);
 
-    // leaderboard.innerHTML = "";
-    // let data = {
-    //   player_id: id,
-    // };
-    // let configObj = {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Accept: "application/json",
-    //   },
-    //   body: JSON.stringify(data),
-    // };
+    leaderboard.innerHTML = "";
 
-    // fetch(GAMES_URL, configObj)
-    //   .then((res) => res.json())
-    //   .then((obj) => setCurrentGame(obj))
-    //   .catch((errors) => console.log(`createGame Failed: ${errors}`));
     return fetch(GAMES_URL, {
       method: "POST",
       headers: {
@@ -1188,30 +1144,6 @@ document.addEventListener("DOMContentLoaded", (event) => {
     preSaveOrNot();
   }
 
-  // function preSaveOrNot() {
-  //   if (testing) {
-  //     console.log(`preSaveOrNot()`);
-  //   }
-  //   let data = {
-  //     id: CURRENT_GAME,
-  //     score: score,
-  //   };
-
-  //   let configObj = {
-  //     method: "PATCH",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Accept: "application/json",
-  //     },
-  //     body: JSON.stringify(data),
-  //   };
-
-  //   fetch(GAMES_URL, configObj)
-  //     .then((res) => res.json())
-  //     .then(saveOrNot())
-  //     .catch((errors) => console.log(`endGame: ${errors}`));
-  // }
-
   function preSaveOrNot() {
     if (testing) console.log("preSaveOrNot()");
 
@@ -1220,15 +1152,6 @@ document.addEventListener("DOMContentLoaded", (event) => {
       // You can still let the user enter a name if you want:
       return saveOrNot();
     }
-
-    // const configObj = {
-    //   method: "PATCH",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Accept: "application/json",
-    //   },
-    //   body: JSON.stringify({ game: { score } }), // <-- nested under :game
-    // };
 
     const configObj = {
       method: "PATCH",
@@ -1280,29 +1203,6 @@ document.addEventListener("DOMContentLoaded", (event) => {
     reloadGame();
   }
   // ----------------------Save Player--------------------------
-  // function savePlayer(name) {
-  //   if (testing) {
-  //     console.log(`savePlayer:name = ${name}`);
-  //   }
-  //   let data = {
-  //     id: CURRENT_PLAYER,
-  //     name: name,
-  //   };
-
-  //   let configOb = {
-  //     method: "PATCH",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Accept: "application/json",
-  //     },
-  //     body: JSON.stringify(data),
-  //   };
-
-  //   fetch(PLAYERS_URL, configOb)
-  //     .then((res) => res.json())
-  //     .then(updateGame(name))
-  //     .catch((errors) => console.log(`savePlayer: ${errors}`));
-  // }
 
   function savePlayer(name) {
     if (testing) console.log(`savePlayer:name = ${name}`);
@@ -1334,30 +1234,6 @@ document.addEventListener("DOMContentLoaded", (event) => {
       .then(() => reloadGame())
       .catch((err) => console.log(`savePlayer: ${err}`));
   }
-
-  // function updateGame(name) {
-  //   if (testing) {
-  //     console.log(`updateGame(): git name = ${name}`);
-  //   }
-  //   let data = {
-  //     id: CURRENT_GAME,
-  //     name: name,
-  //   };
-
-  //   let configOb = {
-  //     method: "PATCH",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Accept: "application/json",
-  //     },
-  //     body: JSON.stringify(data),
-  //   };
-
-  //   fetch(GAMES_URL, configOb)
-  //     .then((res) => res.json())
-  //     .then(() => reloadGame())
-  //     .catch((errors) => console.log(`updateGame: ${errors}`));
-  // }
 
   function reloadGame() {
     if (testing) {
