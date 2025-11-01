@@ -32,11 +32,15 @@ gulp.task(
 	gulp.series("sass", function () {
 		browserSync.init({
 			server: "./app/",
+			port: 3001,
+			open: false,    // don’t keep popping new tabs
+  			notify: false   // hide the ‘Connected’ toast
 		});
 
 		gulp.watch("app/scss/*.scss", gulp.series("sass"));
 		gulp.watch("app/*.html").on("change", browserSync.reload);
 		gulp.watch("app/*.js").on("change", browserSync.reload);
+		gulp.watch("app/content/**/*").on("change", browserSync.reload);
 	})
 );
 
