@@ -59,12 +59,10 @@ function resetGlobalVars() {
   testing = isLocalHost(host);
   // ----------------------------------------------------------------------
 
-
   // Only force HTTPS outside local dev
   if (!testing && window.location.protocol === "http:") {
     window.location.href = "https://" + host;
   }
-
 
   if (testing) {
     console.log(`* * * TESTING = TRUE * * *`);
@@ -113,7 +111,32 @@ const scoreIncrement = 1000;
 const keySegments = 15;
 const factor = 5 / keySegments;
 const AudioContext = window.AudioContext || window.webkitAudioContext;
-const context = new AudioContext();
+let context = null;
+
+function getAudioContext() {
+  if (!context) {
+    context = new AudioContext();
+  }
+  if (context.state === "suspended") {
+    // resume returns a promise; we don't need to await here
+    context.resume();
+  }
+  return context;
+}
+
+// one-time unlock on first gesture (covers click, keydown, touch)
+function unlockAudio() {
+  try {
+    getAudioContext();
+  } catch (_) {}
+  document.removeEventListener("click", unlockAudio);
+  document.removeEventListener("keydown", unlockAudio);
+  document.removeEventListener("touchstart", unlockAudio);
+}
+document.addEventListener("click", unlockAudio, { once: true });
+document.addEventListener("keydown", unlockAudio, { once: true });
+document.addEventListener("touchstart", unlockAudio, { once: true });
+
 const vol = 0.05;
 const row0 = [
   {
@@ -390,58 +413,59 @@ document.addEventListener("DOMContentLoaded", (event) => {
   // ----------------------Sounds--------------------------
 
   // Play oscillators at certain frequency and for a certain time
-  function playNote(frequency, startTime, duration, waveType) {
-    const osc1 = context.createOscillator();
-    const osc2 = context.createOscillator();
-    const volume = context.createGain();
+  // function playNote(frequency, startTime, duration, waveType) {
 
-    // Set oscillator wave type
+  function playNote(frequency, offsetSec, durationSec, waveType = "square") {
+    const ctx = getAudioContext();
+    if (!ctx || ctx.state === "suspended") return;
+
+    const startAt = ctx.currentTime + (offsetSec || 0);
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const volume = ctx.createGain();
+
     osc1.type = waveType;
     osc2.type = waveType;
-
     volume.gain.value = vol;
 
-    // Set up node routing
     osc1.connect(volume);
     osc2.connect(volume);
-    volume.connect(context.destination);
+    volume.connect(ctx.destination);
 
-    // Detune oscillators for chorus effect
+    // slight detune for chorus
     osc1.frequency.value = frequency + 1;
     osc2.frequency.value = frequency - 2;
 
-    // Fade out
-    volume.gain.setValueAtTime(vol, startTime + duration - 0.05);
-    volume.gain.linearRampToValueAtTime(0, startTime + duration);
+    // envelope
+    volume.gain.setValueAtTime(vol, startAt);
+    const endAt = startAt + durationSec;
+    volume.gain.setValueAtTime(vol, endAt - 0.05);
+    volume.gain.linearRampToValueAtTime(0, endAt);
 
-    // Start oscillators
-    osc1.start(startTime);
-    osc2.start(startTime);
-
-    // Stop oscillators
-    osc1.stop(startTime + duration);
-    osc2.stop(startTime + duration);
+    osc1.start(startAt);
+    osc2.start(startAt);
+    osc1.stop(endAt);
+    osc2.stop(endAt);
   }
 
   function soundScore() {
     // console.log(`soundScore()`);
     // Play a 'B4' now that lasts for 0.116 seconds
-    playNote(scoreNote1, context.currentTime, 0.116, "square");
+    playNote(scoreNote1, 0, 0.116, "square");
 
     // Play an 'E5' just as the previous note finishes, that lasts for 0.232 seconds
-    playNote(scoreNote2, context.currentTime + 0.116, 0.232, "square");
+    playNote(scoreNote2, 0.116, 0.232, "square");
   }
 
   function soundGameStart() {
     // console.log(`soundGameStart()`);
     // Play a 'G4' now that lasts for 0.116 seconds
-    playNote(391.995, context.currentTime, 0.116, "square");
-
     // Play a 'G4' now that lasts for 0.116 seconds
-    playNote(391.995, context.currentTime + 0.116, 0.116, "square");
-
     // Play an 'C5' just as the previous note finishes, that lasts for 0.232 seconds
-    playNote(523.251, context.currentTime + 0.232, 0.232, "square");
+    playNote(391.995, 0, 0.116, "square"); // G4
+    playNote(391.995, 0.116, 0.116, "square"); // G4
+    playNote(523.251, 0.232, 0.232, "square"); // C5
   }
 
   function soundGameOver() {
@@ -449,37 +473,31 @@ document.addEventListener("DOMContentLoaded", (event) => {
       console.log(`soundGameOver()`);
     }
     // Play a 'A Flat/G#' now that lasts for 0.116 seconds
-    playNote(207.652, context.currentTime, 0.116, "square");
-
     // Play a 'F3' now that lasts for 0.116 seconds
-    playNote(174.614, context.currentTime + 0.116, 0.116, "square");
-
     // Play an 'D3' just as the previous note finishes, that lasts for 0.232 seconds
-    playNote(146.832, context.currentTime + 0.232, 0.232, "square");
+    playNote(207.652, 0, 0.116, "square"); // G#3
+    playNote(174.614, 0.116, 0.116, "square"); // F3
+    playNote(146.832, 0.232, 0.232, "square"); // D3
   }
 
   function soundNext() {
     // console.log(`soundNext()`);
     // Play a 'f3' now that lasts for 0.116 seconds
-    playNote(174.614, context.currentTime, 0.116, "square");
-
     // Play a 'g3' now that lasts for 0.116 seconds
-    playNote(195.998, context.currentTime + 0.116, 0.116, "square");
-
     // Play an 'a3' just as the previous note finishes, that lasts for 0.232 seconds
-    playNote(220.0, context.currentTime + 0.232, 0.232, "square");
+    playNote(174.614, 0, 0.116, "square"); // F3
+    playNote(195.998, 0.116, 0.116, "square"); // G3
+    playNote(220.0, 0.232, 0.232, "square"); // A3
   }
 
   function soundDie() {
     // console.log(`soundDie()`);
     // Play a 'e2' now that lasts for 0.116 seconds
-    playNote(82.407, context.currentTime, 0.116, "square");
-
     // Play a 'd#' now that lasts for 0.116 seconds
-    playNote(77.782, context.currentTime + 0.116, 0.116, "square");
-
     // Play an 'c#' just as the previous note finishes, that lasts for 0.232 seconds
-    playNote(69.296, context.currentTime + 0.232, 0.232, "square");
+    playNote(82.407, 0, 0.116, "square"); // E2
+    playNote(77.782, 0.116, 0.116, "square"); // D#2
+    playNote(69.296, 0.232, 0.232, "square"); // C#2
   }
 
   // ----------------------Toggles--------------------------
@@ -875,6 +893,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     }
     gameOn = true;
     toggleColor();
+    getAudioContext(); // ensure resumed before we attempt to play
     soundGameStart();
     activateKeyListeners();
     initAllKeys();
