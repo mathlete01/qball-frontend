@@ -1,11 +1,55 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>QWERTYBall</title>
+    <link rel="stylesheet" href="css/myStyles.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<link rel="icon" type="image/x-icon" href="images/favicon.ico">
   </head>
-  <body>
-    <h1>QWERTYBall</h1>
-    <p>Deployed via GitHub Pages.</p>
+  <body>    
+    <!-- CSS GRID -->
+    <div class="grid-container">
+      <!-- Row 1 -->
+      <div id="ascii-art">
+         ____   _       __  ______  ____   ______  __  __  ____            __  __
+        / __ \ | |     / / / ____/ / __ \ /_  __/ / / / / / __ )  ____ _  / / / /
+       / / / / | | /| / / / __/   / /_/ /  / /   / /_/ / / __  | / __ `/ / / / / 
+      / /_/ /  | |/ |/ / / /___  / _, _/  / /    \   _/ / /_/ / / /_/ / / / / /  
+      \___\_\  |__/|__/ /_____/ /_/ |_|  /_/     /_/   /_____/  \__,_/ /_/ /_/    
+      </div>
+      <!-- Row 2 -->
+			<div id="mobile-user" style="display:none;">
+				<p>This is a Desktop only game</p>
+			</div>
+      <div class="grid-item"></div>
+      <div class="grid-item"></div>
+      <div class="grid-item">
+        <a class="nav" href="#" id="aboutNav">About</a>
+        &nbsp;
+        &nbsp;
+        <a class="nav" href="#" id="hireMeNav">Hire Me!</a>
+      </div>
+      <div class="grid-item"></div>
+      <div class="grid-item"></div>
+      <!-- Row 3 -->
+      <div class="grid-item"></div>
+      <div class="interface-item"><p id="livesText" style="text-align: right">Lives</p></div>
+      <div class="grid-item"></div>
+      <div class="interface-item"><p id="scoreText" style="text-align: left">Score</p></div>
+      <div class="grid-item"></div>
+      <!-- Row 4 -->
+      <div id="game">
+          <div id="leaderboard"></div>
+          <canvas id="myCanvas"> </canvas>
+      </div>
+      <!-- Row 5 -->    
+    <div id="footer">
+      <p id="tagline">"It's like Breakout, if it were especially chaotic and involved
+          banging on your keyboard..." --someone on Reddit</p>
+    </div>
+  </div>
+    <script src="interface.js"></script>
   </body>
 </html>
