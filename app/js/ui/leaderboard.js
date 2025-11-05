@@ -3,7 +3,7 @@ import { leaderboard, livesText, scoreText } from '../init/constants.js';
 import { state } from '../game/state.js';
 import { soundNext } from '../audio/sounds.js';
 import { createPlayer } from '../api/api.js';
-import { getAudioContext } from '../audio/audioContext.js';
+import { getAudioContext, unlockAudio } from '../audio/audioContext.js';
 
 export function drawScore() {
   scoreText.innerText = "Score: " + state.score;
@@ -49,6 +49,8 @@ export function renderLeaderboard(arr) {
   btnPlay.setAttribute("class", "playBtn");
   btnPlay.innerHTML = "PLAY";
   btnPlay.addEventListener("click", () => {
+    // Explicitly unlock audio on PLAY button click (user gesture)
+    unlockAudio();
     // Unlock audio before creating player
     getAudioContext().then(() => {
       createPlayer();
