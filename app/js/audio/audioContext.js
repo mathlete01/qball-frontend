@@ -27,7 +27,9 @@ let audioUnlocked = false;
 // Safari requires audio context creation AND resume to happen synchronously in user gesture
 // This function must be called synchronously during the user gesture (no async/await here)
 export function unlockAudio() {
-  if (audioUnlocked) return Promise.resolve();
+  if (audioUnlocked && context && context.state === "running") {
+    return;
+  }
   
   try {
     // Create context synchronously during user gesture (critical for Safari)
@@ -38,11 +40,9 @@ export function unlockAudio() {
     // Resume the context synchronously (critical for Safari autoplay policy)
     // The resume() call must happen during the user gesture, even though it returns a promise
     // We call it synchronously but don't await it - Safari just needs the call to happen
-    let resumePromise = null;
     if (context.state === "suspended") {
       // Call resume() synchronously - this is what Safari needs
-      resumePromise = context.resume();
-      resumePromise.then(() => {
+      context.resume().then(() => {
         audioUnlocked = true;
         if (state.testing) console.log("Audio context unlocked and resumed");
       }).catch(err => {
@@ -51,20 +51,23 @@ export function unlockAudio() {
     } else if (context.state === "running") {
       audioUnlocked = true;
       if (state.testing) console.log("Audio context already running");
-      return Promise.resolve();
     }
     
     // Remove listeners after first unlock attempt
     document.removeEventListener("click", unlockAudio);
     document.removeEventListener("keydown", unlockAudio);
     document.removeEventListener("touchstart", unlockAudio);
-    
-    // Return the resume promise if we started a resume, otherwise resolved promise
-    return resumePromise || Promise.resolve();
   } catch (err) {
     console.error("Audio unlock exception:", err);
-    return Promise.reject(err);
   }
+}
+
+// Get the audio context synchronously (for Safari - must be called during user gesture)
+export function getAudioContextSync() {
+  if (!context) {
+    context = new AudioContext();
+  }
+  return context;
 }
 
 // Initialize audio unlock listeners when DOM is ready

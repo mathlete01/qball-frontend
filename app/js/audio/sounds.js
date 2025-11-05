@@ -1,17 +1,53 @@
 // Sound effects
-import { getAudioContext } from './audioContext.js';
+import { getAudioContext, getAudioContextSync } from './audioContext.js';
 import { state } from '../game/state.js';
 
 const vol = 0.05;
+
+// Play note synchronously (for Safari - must be called during user gesture for first sound)
+function playNoteSync(frequency, offsetSec, durationSec, waveType = "square") {
+  const ctx = getAudioContextSync();
+  if (!ctx) return;
+  
+  // For Safari, we need to create and start audio nodes synchronously during user gesture
+  // Even if context is suspended, we can still create nodes and start them
+  // They'll play once the context resumes
+  const startAt = ctx.currentTime + (offsetSec || 0);
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const volume = ctx.createGain();
+  
+  osc1.type = waveType;
+  osc2.type = waveType;
+  volume.gain.value = vol;
+  
+  osc1.connect(volume);
+  osc2.connect(volume);
+  volume.connect(ctx.destination);
+  
+  osc1.frequency.value = frequency + 1;
+  osc2.frequency.value = frequency - 2;
+  
+  volume.gain.setValueAtTime(vol, startAt);
+  const endAt = startAt + durationSec;
+  volume.gain.setValueAtTime(vol, endAt - 0.05);
+  volume.gain.linearRampToValueAtTime(0, endAt);
+  
+  osc1.start(startAt);
+  osc2.start(startAt);
+  osc1.stop(endAt);
+  osc2.stop(endAt);
+}
 
 function playNote(frequency, offsetSec, durationSec, waveType = "square") {
   getAudioContext().then(ctx => {
     if (!ctx) return;
     
-    // If suspended, try to resume (this may fail if no user gesture)
-    // Safari requires the resume to happen during user gesture, so we try once
+    // If suspended, try to resume immediately (Safari requires this during user gesture)
     if (ctx.state === "suspended") {
-      ctx.resume().then(() => {
+      // Call resume() synchronously - this is critical for Safari
+      const resumePromise = ctx.resume();
+      resumePromise.then(() => {
         // Retry playing the note after resuming
         playNote(frequency, offsetSec, durationSec, waveType);
       }).catch(() => {
@@ -21,8 +57,14 @@ function playNote(frequency, offsetSec, durationSec, waveType = "square") {
       return;
     }
     
-    // Ensure context is actually running (Safari check)
+    // If not running yet, try once more to resume (for Safari timing edge cases)
     if (ctx.state !== "running") {
+      if (ctx.state === "suspended") {
+        ctx.resume().then(() => {
+          playNote(frequency, offsetSec, durationSec, waveType);
+        });
+        return;
+      }
       if (state.testing) console.log("Audio context not running, state:", ctx.state);
       return;
     }
@@ -60,6 +102,9 @@ function playNote(frequency, offsetSec, durationSec, waveType = "square") {
   });
 }
 
+// Track if we've played the first sound (for Safari - first sound must be synchronous)
+let firstSoundPlayed = false;
+
 export function soundScore() {
   playNote(state.scoreNote1, 0, 0.116, "square");
   playNote(state.scoreNote2, 0.116, 0.232, "square");
@@ -81,9 +126,17 @@ export function soundGameOver() {
 }
 
 export function soundNext() {
-  playNote(174.614, 0, 0.116, "square"); // F3
-  playNote(195.998, 0.116, 0.116, "square"); // G3
-  playNote(220.0, 0.232, 0.232, "square"); // A3
+  // For Safari: first sound must be played synchronously during user gesture
+  if (!firstSoundPlayed) {
+    firstSoundPlayed = true;
+    playNoteSync(174.614, 0, 0.116, "square"); // F3
+    playNoteSync(195.998, 0.116, 0.116, "square"); // G3
+    playNoteSync(220.0, 0.232, 0.232, "square"); // A3
+  } else {
+    playNote(174.614, 0, 0.116, "square"); // F3
+    playNote(195.998, 0.116, 0.116, "square"); // G3
+    playNote(220.0, 0.232, 0.232, "square"); // A3
+  }
 }
 
 export function soundDie() {

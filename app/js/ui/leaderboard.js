@@ -50,20 +50,16 @@ export function renderLeaderboard(arr) {
   btnPlay.setAttribute("class", "playBtn");
   btnPlay.innerHTML = "PLAY";
   btnPlay.addEventListener("click", () => {
-    // Explicitly unlock audio on PLAY button click (user gesture)
-    // Call unlockAudio synchronously - Safari requires this to happen during the gesture
-    const unlockPromise = unlockAudio();
+    // Safari requires audio unlock AND first sound to happen synchronously during user gesture
+    // All of this must happen in the same synchronous call stack:
+    // 1. Create AudioContext (unlockAudio)
+    // 2. Call resume() (unlockAudio)
+    // 3. Create audio nodes and start them (soundNext -> playNoteSync)
+    unlockAudio();
+    soundNext(); // This will use playNoteSync for first sound (synchronous)
     
-    // Play the "next" sound and create player after unlock completes
-    unlockPromise.then(() => {
-      soundNext(); // Play sound now that audio is unlocked
-      return getAudioContext();
-    }).then(() => {
-      createPlayer();
-    }).catch(err => {
-      if (state.testing) console.log("Audio unlock error:", err);
-      createPlayer(); // Still try to create player even if audio fails
-    });
+    // Create player (can be async)
+    createPlayer();
   });
 
   const centerWrapper = document.createElement("div");
