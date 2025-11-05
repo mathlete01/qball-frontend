@@ -76,7 +76,7 @@ export function resetGlobalVars() {
   }
   state.PLAYERS_URL = `${state.BASE_URL}/players`;
   state.GAMES_URL = `${state.BASE_URL}/games`;
-  console.log("BASE_URL =", state.BASE_URL);
+  // console.log("BASE_URL =", state.BASE_URL);
 
   state.colorKeyUpStroke = colorLight;
   state.colorKeyUpFill = colorWhite;
