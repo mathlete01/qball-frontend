@@ -25,7 +25,7 @@ var directionH;
 var gameOn;
 var isMobile = false; //initiate as false
 
-let BASE_URL = "https://backend-qwertyball.herokuapp.com";
+let BASE_URL = "https://qball-backend-std9.onrender.com";
 
 // device detection
 if (
@@ -72,7 +72,7 @@ function resetGlobalVars() {
   } else {
     speed = 0.3;
     lives = 3;
-    BASE_URL = "https://backend-qwertyball.herokuapp.com"; // <-- explicit
+    BASE_URL = "https://qball-backend-std9.onrender.com"; // <-- explicit
   }
   PLAYERS_URL = `${BASE_URL}/players`;
   GAMES_URL = `${BASE_URL}/games`;
