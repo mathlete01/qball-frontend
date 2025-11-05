@@ -9,6 +9,12 @@ var gulpIf = require("gulp-if");
 // var cssnano = require("gulp-cssnano");
 const cleanCSS = require("gulp-clean-css");
 var imagemin = require("gulp-imagemin");
+var rollup = require("rollup");
+var { nodeResolve } = require("@rollup/plugin-node-resolve");
+var terser = require("@rollup/plugin-terser");
+var path = require("path");
+var fs = require("fs");
+var replace = require("gulp-replace");
 // Compile sass into CSS & auto-inject into browsers
 gulp.task("sass", async function () {
   return await gulp
@@ -20,11 +26,60 @@ gulp.task("sass", async function () {
     .pipe(browserSync.stream());
 });
 
+// Bundle ES6 modules with Rollup
 gulp.task("js", async function () {
-  return await gulp
-    .src("app/*.js")
-    .pipe(gulpIf("*.js", uglify()))
-    .pipe(gulp.dest("dist/"));
+  try {
+    // Ensure dist/js directory exists
+    const distJsDir = path.join(__dirname, "dist", "js");
+    if (!fs.existsSync(path.join(__dirname, "dist"))) {
+      fs.mkdirSync(path.join(__dirname, "dist"), { recursive: true });
+    }
+    if (!fs.existsSync(distJsDir)) {
+      fs.mkdirSync(distJsDir, { recursive: true });
+    }
+
+    const bundle = await rollup.rollup({
+      input: path.join(__dirname, "app", "js", "main.js"),
+      plugins: [
+        nodeResolve({
+          // Resolve .js extensions and relative imports
+          extensions: ['.js'],
+          browser: true,
+        }),
+      ],
+      // Suppress circular dependency warnings - they're handled by ES modules
+      onwarn: function(warning, warn) {
+        // Skip circular dependency warnings
+        if (warning.code === 'CIRCULAR_DEPENDENCY') {
+          return;
+        }
+        // Use default for everything else
+        warn(warning);
+      }
+    });
+
+    // Generate bundle
+    const result = await bundle.write({
+      file: path.join(__dirname, "dist", "js", "main.js"),
+      format: "iife", // Immediately Invoked Function Expression for browser
+      name: "QWERTYBall",
+      plugins: [
+        terser({
+          compress: {
+            drop_console: false, // Keep console.logs for debugging
+          },
+        }),
+      ],
+    });
+
+    // Bundle generated successfully
+
+    await bundle.close();
+    return Promise.resolve();
+  } catch (error) {
+    console.error("Rollup bundling error:", error);
+    throw error;
+  }
 });
 
 // Static Server + watching scss/html files
@@ -96,10 +151,26 @@ gulp.task("clean", async function (done) {
 gulp.task("useref", async function () {
   return await gulp
     .src("app/*.html")
-    .pipe(useref())
-    .pipe(gulpIf("*.js", uglify()))
+    .pipe(useref({
+      // Don't process JS files - rollup already bundled them
+      searchPath: "app",
+      noAssets: true // Don't copy assets, just process HTML
+    }))
     // Minifies only if it's a CSS file
     .pipe(gulpIf("*.css", cleanCSS()))
+    .pipe(gulp.dest("dist"));
+});
+
+// Remove type="module" from script tags after bundling
+gulp.task("removeModuleType", async function () {
+  return await gulp
+    .src("dist/*.html")
+    .pipe(
+      replace(
+        /<script type="module" src="js\/main\.js"><\/script>/g,
+        '<script src="js/main.js"></script>'
+      )
+    )
     .pipe(gulp.dest("dist"));
 });
 
@@ -117,6 +188,7 @@ gulp.task(
     "sass",
     "js",
     "useref",
+    "removeModuleType",
     "images",
     "copyFiles",
     function (done) {
