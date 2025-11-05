@@ -78,7 +78,7 @@ function resetGlobalVars() {
   GAMES_URL = `${BASE_URL}/games`;
   // (optional but helpful while debugging)
   // console.log("BASE_URL =", BASE_URL);
-  console.log("556");
+  console.log("910");
 
   colorKeyUpStroke = colorLight;
   colorKeyUpFill = colorWhite;
@@ -396,7 +396,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
   const aboutNav = document.getElementById("aboutNav");
 
   aboutNav.addEventListener("click", () => {
-    showModal("About!", contentAbout, [
+    showModal("About", contentAbout, [
       {
         label: "Close",
         onClick: (modal) => {},
@@ -407,7 +407,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
   const hireMeNav = document.getElementById("hireMeNav");
 
   hireMeNav.addEventListener("click", () => {
-    showModal("Hire Me!", contentHireMe, [
+    showModal("Hire Me", contentHireMe, [
       {
         label: "Close",
         onClick: (modal) => {},
