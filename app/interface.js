@@ -78,6 +78,7 @@ function resetGlobalVars() {
   GAMES_URL = `${BASE_URL}/games`;
   // (optional but helpful while debugging)
   // console.log("BASE_URL =", BASE_URL);
+  console.log("556");
 
   colorKeyUpStroke = colorLight;
   colorKeyUpFill = colorWhite;
