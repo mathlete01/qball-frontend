@@ -167,8 +167,8 @@ gulp.task("removeModuleType", async function () {
     .src("dist/*.html")
     .pipe(
       replace(
-        /<script type="module" src="js\/main\.js"><\/script>/g,
-        '<script src="js/main.js"></script>'
+        /type="module"/g,
+        ''
       )
     )
     .pipe(gulp.dest("dist"));

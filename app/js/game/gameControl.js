@@ -1,7 +1,7 @@
 // Game control functions
 import { state } from '../game/state.js';
 import { colorLight, colorBlack, colorWhite, canvas, preventDefaultKeys, leaderboard, scoreIncrement } from '../init/constants.js';
-import { getAudioContext } from '../audio/audioContext.js';
+import { getAudioContext, unlockAudio } from '../audio/audioContext.js';
 import { soundScore, soundGameStart, soundGameOver, soundDie } from '../audio/sounds.js';
 import { releaseAllKeys, initAllKeys, drawKeysUp, drawKeysDown } from '../rendering/keys.js';
 import { row0, row1, row2, row3, row4 } from '../init/keyboard.js';
@@ -124,6 +124,8 @@ export function startGame() {
   }
   state.gameOn = true;
   toggleColor();
+  // Explicitly unlock audio before playing sounds
+  unlockAudio();
   // Ensure audio context is resumed before playing sounds
   getAudioContext().then(() => {
     soundGameStart();

@@ -6,7 +6,19 @@ const vol = 0.05;
 
 function playNote(frequency, offsetSec, durationSec, waveType = "square") {
   getAudioContext().then(ctx => {
-    if (!ctx || ctx.state === "suspended") return;
+    if (!ctx) return;
+    
+    // If suspended, try to resume (this may fail if no user gesture)
+    if (ctx.state === "suspended") {
+      ctx.resume().then(() => {
+        // Retry playing the note after resuming
+        playNote(frequency, offsetSec, durationSec, waveType);
+      }).catch(() => {
+        // Failed to resume - audio requires user interaction
+        if (state.testing) console.log("Audio context suspended and resume failed");
+      });
+      return;
+    }
 
     const startAt = ctx.currentTime + (offsetSec || 0);
 
