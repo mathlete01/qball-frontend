@@ -22,41 +22,36 @@ export function getAudioContext() {
 
 // Track if audio has been unlocked
 let audioUnlocked = false;
-let unlockPromise = null;
 
 // one-time unlock on first gesture (covers click, keydown, touch)
 // Safari requires audio context creation AND resume to happen synchronously in user gesture
+// This function must be called synchronously during the user gesture (no async/await here)
 export function unlockAudio() {
-  // If already unlocked, return resolved promise
-  if (audioUnlocked && context && context.state === "running") {
-    return Promise.resolve();
-  }
+  if (audioUnlocked) return Promise.resolve();
   
-  // If unlock is in progress, return that promise
-  if (unlockPromise) {
-    return unlockPromise;
-  }
-  
-  unlockPromise = (async () => {
-    try {
-      // Create context synchronously during user gesture (critical for Safari)
-      if (!context) {
-        context = new AudioContext();
-      }
-      
-      // Resume the context synchronously (critical for Safari autoplay policy)
-      // The resume() call must happen during the user gesture, even though it returns a promise
-      if (context.state === "suspended") {
-        // Call resume() synchronously - this is what Safari needs
-        await context.resume();
+  try {
+    // Create context synchronously during user gesture (critical for Safari)
+    if (!context) {
+      context = new AudioContext();
+    }
+    
+    // Resume the context synchronously (critical for Safari autoplay policy)
+    // The resume() call must happen during the user gesture, even though it returns a promise
+    // We call it synchronously but don't await it - Safari just needs the call to happen
+    let resumePromise = null;
+    if (context.state === "suspended") {
+      // Call resume() synchronously - this is what Safari needs
+      resumePromise = context.resume();
+      resumePromise.then(() => {
         audioUnlocked = true;
         if (state.testing) console.log("Audio context unlocked and resumed");
-      } else if (context.state === "running") {
-        audioUnlocked = true;
-        if (state.testing) console.log("Audio context already running");
-      }
-    } catch (err) {
-      console.error("Audio unlock exception:", err);
+      }).catch(err => {
+        console.error("Audio unlock error:", err);
+      });
+    } else if (context.state === "running") {
+      audioUnlocked = true;
+      if (state.testing) console.log("Audio context already running");
+      return Promise.resolve();
     }
     
     // Remove listeners after first unlock attempt
@@ -64,10 +59,12 @@ export function unlockAudio() {
     document.removeEventListener("keydown", unlockAudio);
     document.removeEventListener("touchstart", unlockAudio);
     
-    return;
-  })();
-  
-  return unlockPromise;
+    // Return the resume promise if we started a resume, otherwise resolved promise
+    return resumePromise || Promise.resolve();
+  } catch (err) {
+    console.error("Audio unlock exception:", err);
+    return Promise.reject(err);
+  }
 }
 
 // Initialize audio unlock listeners when DOM is ready

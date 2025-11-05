@@ -25,7 +25,8 @@ export function renderLeaderboard(arr) {
   if (state.testing) {
     console.log("renderLeaderboard()");
   }
-  soundNext();
+  // Don't play sound here - wait for user interaction (Safari requirement)
+  // soundNext();
   let filteredArr = arr.filter((element) => element.player.name !== null);
   let h1 = document.createElement("h1");
   h1.className = "title";
@@ -50,8 +51,14 @@ export function renderLeaderboard(arr) {
   btnPlay.innerHTML = "PLAY";
   btnPlay.addEventListener("click", () => {
     // Explicitly unlock audio on PLAY button click (user gesture)
-    // Wait for unlock to complete before proceeding (critical for Safari)
-    unlockAudio().then(() => {
+    // Call unlockAudio synchronously - Safari requires this to happen during the gesture
+    const unlockPromise = unlockAudio();
+    
+    // Play the "next" sound and create player after unlock completes
+    unlockPromise.then(() => {
+      soundNext(); // Play sound now that audio is unlocked
+      return getAudioContext();
+    }).then(() => {
       createPlayer();
     }).catch(err => {
       if (state.testing) console.log("Audio unlock error:", err);
