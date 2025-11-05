@@ -127,7 +127,11 @@ function getAudioContext() {
 // one-time unlock on first gesture (covers click, keydown, touch)
 function unlockAudio() {
   try {
-    getAudioContext();
+    getAudioContext().then(() => {
+      // Audio context is now unlocked and ready
+    }).catch(err => {
+      if (testing) console.log("Audio unlock error:", err);
+    });
   } catch (_) {}
   document.removeEventListener("click", unlockAudio);
   document.removeEventListener("keydown", unlockAudio);
