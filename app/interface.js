@@ -118,10 +118,10 @@ function getAudioContext() {
     context = new AudioContext();
   }
   if (context.state === "suspended") {
-    // resume returns a promise; we don't need to await here
-    context.resume();
+    // resume returns a promise; we need to await it
+    return context.resume().then(() => context);
   }
-  return context;
+  return Promise.resolve(context);
 }
 
 // one-time unlock on first gesture (covers click, keydown, touch)
@@ -416,37 +416,40 @@ document.addEventListener("DOMContentLoaded", (event) => {
   // function playNote(frequency, startTime, duration, waveType) {
 
   function playNote(frequency, offsetSec, durationSec, waveType = "square") {
-    const ctx = getAudioContext();
-    if (!ctx || ctx.state === "suspended") return;
+    getAudioContext().then(ctx => {
+      if (!ctx || ctx.state === "suspended") return;
 
-    const startAt = ctx.currentTime + (offsetSec || 0);
+      const startAt = ctx.currentTime + (offsetSec || 0);
 
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const volume = ctx.createGain();
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const volume = ctx.createGain();
 
-    osc1.type = waveType;
-    osc2.type = waveType;
-    volume.gain.value = vol;
+      osc1.type = waveType;
+      osc2.type = waveType;
+      volume.gain.value = vol;
 
-    osc1.connect(volume);
-    osc2.connect(volume);
-    volume.connect(ctx.destination);
+      osc1.connect(volume);
+      osc2.connect(volume);
+      volume.connect(ctx.destination);
 
-    // slight detune for chorus
-    osc1.frequency.value = frequency + 1;
-    osc2.frequency.value = frequency - 2;
+      // slight detune for chorus
+      osc1.frequency.value = frequency + 1;
+      osc2.frequency.value = frequency - 2;
 
-    // envelope
-    volume.gain.setValueAtTime(vol, startAt);
-    const endAt = startAt + durationSec;
-    volume.gain.setValueAtTime(vol, endAt - 0.05);
-    volume.gain.linearRampToValueAtTime(0, endAt);
+      // envelope
+      volume.gain.setValueAtTime(vol, startAt);
+      const endAt = startAt + durationSec;
+      volume.gain.setValueAtTime(vol, endAt - 0.05);
+      volume.gain.linearRampToValueAtTime(0, endAt);
 
-    osc1.start(startAt);
-    osc2.start(startAt);
-    osc1.stop(endAt);
-    osc2.stop(endAt);
+      osc1.start(startAt);
+      osc2.start(startAt);
+      osc1.stop(endAt);
+      osc2.stop(endAt);
+    }).catch(err => {
+      if (testing) console.log("playNote error:", err);
+    });
   }
 
   function soundScore() {
@@ -757,7 +760,15 @@ document.addEventListener("DOMContentLoaded", (event) => {
     btnPlay.setAttribute("id", "btn-play");
     btnPlay.setAttribute("class", "playBtn");
     btnPlay.innerHTML = "PLAY";
-    btnPlay.addEventListener("click", () => createPlayer());
+    btnPlay.addEventListener("click", () => {
+      // Unlock audio before creating player
+      getAudioContext().then(() => {
+        createPlayer();
+      }).catch(err => {
+        if (testing) console.log("Audio unlock error:", err);
+        createPlayer(); // Still try to create player even if audio fails
+      });
+    });
 
     const centerWrapper = document.createElement("div");
     centerWrapper.setAttribute("class", "centerWrapper");
@@ -893,8 +904,12 @@ document.addEventListener("DOMContentLoaded", (event) => {
     }
     gameOn = true;
     toggleColor();
-    getAudioContext(); // ensure resumed before we attempt to play
-    soundGameStart();
+    // Ensure audio context is resumed before playing sounds
+    getAudioContext().then(() => {
+      soundGameStart();
+    }).catch(err => {
+      if (testing) console.log("Audio context resume error:", err);
+    });
     activateKeyListeners();
     initAllKeys();
     interval = setInterval(draw, 10);
