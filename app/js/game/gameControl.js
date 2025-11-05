@@ -124,10 +124,11 @@ export function startGame() {
   }
   state.gameOn = true;
   toggleColor();
-  // Explicitly unlock audio before playing sounds
-  unlockAudio();
-  // Ensure audio context is resumed before playing sounds
-  getAudioContext().then(() => {
+  // Explicitly unlock audio before playing sounds (wait for unlock to complete)
+  unlockAudio().then(() => {
+    // Ensure audio context is ready before playing sounds
+    return getAudioContext();
+  }).then(() => {
     soundGameStart();
   }).catch(err => {
     if (state.testing) console.log("Audio context resume error:", err);

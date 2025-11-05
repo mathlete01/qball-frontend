@@ -9,6 +9,7 @@ function playNote(frequency, offsetSec, durationSec, waveType = "square") {
     if (!ctx) return;
     
     // If suspended, try to resume (this may fail if no user gesture)
+    // Safari requires the resume to happen during user gesture, so we try once
     if (ctx.state === "suspended") {
       ctx.resume().then(() => {
         // Retry playing the note after resuming
@@ -17,6 +18,12 @@ function playNote(frequency, offsetSec, durationSec, waveType = "square") {
         // Failed to resume - audio requires user interaction
         if (state.testing) console.log("Audio context suspended and resume failed");
       });
+      return;
+    }
+    
+    // Ensure context is actually running (Safari check)
+    if (ctx.state !== "running") {
+      if (state.testing) console.log("Audio context not running, state:", ctx.state);
       return;
     }
 

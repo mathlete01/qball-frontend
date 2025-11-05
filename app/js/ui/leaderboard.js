@@ -50,9 +50,8 @@ export function renderLeaderboard(arr) {
   btnPlay.innerHTML = "PLAY";
   btnPlay.addEventListener("click", () => {
     // Explicitly unlock audio on PLAY button click (user gesture)
-    unlockAudio();
-    // Unlock audio before creating player
-    getAudioContext().then(() => {
+    // Wait for unlock to complete before proceeding (critical for Safari)
+    unlockAudio().then(() => {
       createPlayer();
     }).catch(err => {
       if (state.testing) console.log("Audio unlock error:", err);
