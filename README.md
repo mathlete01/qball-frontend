@@ -1,4 +1,4 @@
-## qball-frontend-2
+## qball-frontend
 
 QWERTYBall is a little browser game built with a Javascript frontend and a Ruby on Rails backend.
 
